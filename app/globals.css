@@ -1,0 +1,106 @@
+/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-syne: 'Syne', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background-color: #fafaf8;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* ============================================================
+   Liquid Glass — vraie distortion via filtre SVG chaîné dans
+   backdrop-filter, pas un blur css plat.
+   ============================================================ */
+.glass-card {
+  position: relative;
+  isolation: isolate;
+  backdrop-filter: blur(3px) url(#lg-distort-soft) saturate(1.6) brightness(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6) brightness(1.08); /* Safari : pas de filtre SVG, blur seul */
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.glass-card--strong {
+  backdrop-filter: blur(4px) url(#lg-distort-strong) saturate(1.7) brightness(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.7) brightness(1.1);
+}
+
+.glass-card::before {
+  /* Liseré néo-chromatique : trois traits RGB légèrement décalés au survol */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 90, 90, 0.55),
+    rgba(120, 255, 210, 0.45) 35%,
+    rgba(120, 170, 255, 0.55) 70%,
+    rgba(255, 90, 220, 0.45)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glass-card:hover::before {
+  opacity: 1;
+}
+
+.glass-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   Bento — étirement accentué, cartes en flex-row / flex-col
+   ============================================================ */
+.bento-cell {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s ease;
+}
+.bento-cell:hover {
+  transform: scale(1.015);
+}
+
+/* ============================================================
+   Flux 3D — halo de reveal derrière le canvas produit
+   ============================================================ */
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
