@@ -7,6 +7,7 @@ import { getSession } from '@/lib/session';
 import { getTheme } from '@/lib/themes';
 import { ShopHeader } from '@/components/ShopHeader';
 import { ProductGrid } from '@/components/ProductGrid';
+import { ProductsTemps } from '@/components/ProductsTemps';
 import { ReviewSection } from '@/components/ReviewSection';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
@@ -71,7 +72,7 @@ export default async function ShopPage({ params }: { params: Promise<{ shopSlug:
       />
 
       <div className="px-4 md:px-8 pb-20">
-        <ProductGrid
+        <ProductsTemps
           products={products}
           template={shop.template}
           theme={theme}
