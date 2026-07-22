@@ -228,27 +228,41 @@ export function MagazineProducts({
       </div>
 
       {/* ---------- MOBILE : défilement respiré, une pièce à la fois ---------- */}
-      <div className="md:hidden flex flex-col gap-12 px-1">
-        <BayMarker index={0} color={theme.textMuted} accent={accent} />
-        {products.map((p, i) => (
-          <div key={p._id} className="flex flex-col gap-8">
-            <GalleryFrame
-              product={p}
-              index={i}
-              height={i % 3 === 1 ? 340 : 420}
-              shopSlug={shopSlug}
-              theme={theme}
-              accent={accent}
-              isFavorite={favoriteIds.includes(p._id)}
-              isAuthenticated={isAuthenticated}
-            />
-            {i % 4 === 3 && i < products.length - 1 && (
-              <div className="flex items-center justify-center">
-                <LoopRing color={accent} size={44} className="opacity-50" />
-              </div>
-            )}
-          </div>
-        ))}
+      {/* ---------- MOBILE : galerie 80%, alternée gauche/droite ---------- */}
+      <div className="md:hidden flex flex-col gap-12">
+        <div className="px-6">
+          <BayMarker index={0} color={theme.textMuted} accent={accent} />
+        </div>
+
+        {products.map((p, i) => {
+          const alignLeft = i % 2 === 0;
+          return (
+            <div
+              key={p._id} 
+            //   style={{backgroundColor: "black"}}
+              className={[
+                'flex flex-col gap-6 w-[80%]',
+                alignLeft ? 'self-start pl-1.6' : 'self-end pr-1.6',
+              ].join(' ')}
+            >
+              <GalleryFrame
+                product={p}
+                index={i}
+                height={i % 3 === 1 ? 340 : 420}
+                shopSlug={shopSlug}
+                theme={theme}
+                accent={accent}
+                isFavorite={favoriteIds.includes(p._id)}
+                isAuthenticated={isAuthenticated}
+              />
+              {i % 4 === 3 && i < products.length - 1 && (
+                <div className={`flex ${alignLeft ? 'justify-start' : 'justify-end'}`}>
+                  <LoopRing color={accent} size={44} className="opacity-50" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -30,9 +30,9 @@ interface SceneProps {
   onActiveIndexChange: (index: number) => void;
 }
 
-const FAR_START = 6.0;
-const FAR_END = 3.8;
-const NEAR_START = 2.8;
+const FAR_START = 5.2;
+const FAR_END = 3.2;
+const NEAR_START = 2.6;
 const NEAR_END = 0.8;
 
 function clamp(v: number, min: number, max: number) {
@@ -45,59 +45,43 @@ function pieceOpacity(absD: number) {
   return Math.min(farT, nearT);
 }
 
-// Générateur de texture de particule 100% ronde (pas de carrés)
-function createCircleTexture() {
-  if (typeof window === 'undefined') return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+// ============================================================
+// ENVIRONNEMENT OCÉANIQUE & ASSETS CONCENTRÉS (AWWWARDS)
+// ============================================================
 
-  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-  gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.45)');
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(32, 32, 32, 0, Math.PI * 2);
-  ctx.fill();
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
-}
-
-// 1. Particules sous-marines denses et prolongées tout au long du chemin
-function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number; accent: string; extendedDepth: number }) {
+/** Micro-bulles & particules marines concentrées dans l'axe de vision */
+function OceanBubbles({ count = 180, accent }: { count?: number; accent: string }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const circleTexture = useMemo(() => createCircleTexture(), []);
 
-  const [positions, speeds] = useMemo(() => {
+  const [positions, scales, speeds] = useMemo(() => {
     const pos = new Float32Array(count * 3);
+    const sca = new Float32Array(count);
     const spd = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      // Concentrés près du centre visuel (X: -4 à +4, Y: -3.5 à +3.5)
-      pos[i * 3] = (Math.random() - 0.5) * 8.0;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 7.0;
-      // Étendu loin devant le premier produit et largement après le dernier
-      pos[i * 3 + 2] = 4 - Math.random() * (extendedDepth + 15);
-      spd[i] = Math.random() * 0.005 + 0.0015;
-    }
-    return [pos, spd];
-  }, [count, extendedDepth]);
+      // Resserré sur l'axe X/Y pour rester directement sous les yeux de l'utilisateur
+      pos[i * 3] = (Math.random() - 0.5) * 5.5;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 5.0;
+      pos[i * 3 + 2] = -Math.random() * 38; 
 
-  useFrame(() => {
+      sca[i] = Math.random() * 0.05 + 0.015;
+      spd[i] = Math.random() * 0.008 + 0.003; // Vitesse de remontée de la bulle
+    }
+    return [pos, sca, spd];
+  }, [count]);
+
+  useFrame(({ clock }) => {
     if (!pointsRef.current) return;
     const geo = pointsRef.current.geometry;
     const posAttr = geo.attributes.position;
     const array = posAttr.array as Float32Array;
 
+    // Fait monter doucement les bulles vers le haut (effet sous-marin)
     for (let i = 0; i < count; i++) {
       array[i * 3 + 1] += speeds[i];
-      if (array[i * 3 + 1] > 3.5) array[i * 3 + 1] = -3.5;
+      if (array[i * 3 + 1] > 3) {
+        array[i * 3 + 1] = -3;
+      }
     }
     posAttr.needsUpdate = true;
   });
@@ -106,13 +90,13 @@ function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number
     <points ref={pointsRef}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-scale" args={[scales, 1]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.11}
-        map={circleTexture || undefined}
+        size={0.07}
         color={accent}
         transparent
-        opacity={0.42}
+        opacity={0.5}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -120,26 +104,26 @@ function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number
   );
 }
 
-// 2. Assets 3D réguliers et très concentrés entre chaque section
-function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; accent: string }) {
+/** Formes 3D style "cristaux / plancton géométrique" bien cadrés dans le champ visuel */
+function OceanAssets({ positions, accent }: { positions: PlanePosition[]; accent: string }) {
   const groupRef = useRef<THREE.Group>(null);
 
   const assets = useMemo(() => {
     if (!positions.length) return [];
     const items = [];
-    const countPerProduct = 4; // Densité fortement augmentée
+    const countPerProduct = 3; // Plus nombreux
 
     for (let i = 0; i < positions.length; i++) {
       const zPos = positions[i].z;
       for (let j = 0; j < countPerProduct; j++) {
         items.push({
-          id: `dense-ast-${i}-${j}`,
-          // Bien plus près de la trajectoire directe de la caméra pour un vrai impact visuel
-          x: (Math.random() - 0.5) * 3.6,
-          y: (Math.random() - 0.5) * 3.0,
-          z: zPos + (Math.random() - 0.5) * 2.8,
-          scale: Math.random() * 0.11 + 0.045,
-          type: (i + j) % 3,
+          id: `ocean-ast-${i}-${j}`,
+          // Concentrés très près de l'axe de vision (-1.8 à +1.8)
+          x: (Math.random() - 0.5) * 3.2,
+          y: (Math.random() - 0.5) * 2.8,
+          z: zPos + (Math.random() - 0.5) * 1.8,
+          scale: Math.random() * 0.14 + 0.05,
+          type: Math.floor(Math.random() * 3),
         });
       }
     }
@@ -150,15 +134,16 @@ function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; a
     if (!groupRef.current) return;
     const t = clock.getElapsedTime();
     groupRef.current.children.forEach((child, i) => {
-      child.rotation.x = Math.sin(t * 0.35 + i) * 0.45;
-      child.rotation.y = t * 0.22 + i;
+      // Rotation lente façon objet en apesanteur dans l'eau
+      child.rotation.x = Math.sin(t * 0.4 + i) * 0.5;
+      child.rotation.y = t * 0.25 + i;
     });
   });
 
   return (
     <group ref={groupRef}>
       {assets.map((ast) => (
-        <Float key={ast.id} speed={1.4} rotationIntensity={0.7} floatIntensity={0.9}>
+        <Float key={ast.id} speed={1.5} rotationIntensity={0.8} floatIntensity={1.2}>
           <mesh position={[ast.x, ast.y, ast.z]} scale={ast.scale}>
             {ast.type === 0 && <icosahedronGeometry args={[1, 0]} />}
             {ast.type === 1 && <torusGeometry args={[0.7, 0.25, 12, 20]} />}
@@ -167,7 +152,7 @@ function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; a
               color={accent}
               wireframe
               transparent
-              opacity={0.24}
+              opacity={0.22}
               roughness={0.1}
               metalness={0.9}
             />
@@ -177,6 +162,10 @@ function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; a
     </group>
   );
 }
+
+// ============================================================
+// COMPOSANTS SCÈNE & PRODUITS
+// ============================================================
 
 function ImagePlane({
   url,
@@ -226,8 +215,9 @@ function ProductPiece({
   useFrame(({ clock, camera }) => {
     if (!groupRef.current) return;
     const t = clock.getElapsedTime();
-    const floatY = Math.sin(t * 0.7 + index) * 0.05;
-    const floatRotY = Math.sin(t * 0.35 + index * 1.2) * 0.03;
+    // Houle aqueuse fluide sur les cartes
+    const floatY = Math.sin(t * 0.8 + index) * 0.06;
+    const floatRotY = Math.sin(t * 0.4 + index * 1.2) * 0.035;
 
     const absD = Math.abs(camera.position.z - pos.z);
     const opacity = pieceOpacity(absD);
@@ -294,8 +284,8 @@ function Rig({
     const first = positions[0];
     const last = positions[positions.length - 1];
 
-    const cruiseOffset = mobile ? 4.8 : 5.8;
-    const closeOffset = mobile ? 2.0 : 2.4;
+    const cruiseOffset = mobile ? 3.8 : 4.8;
+    const closeOffset = mobile ? 1.6 : 1.8;
     const introPortion = 0.14;
     const outroPortion = 0.14;
     const midPortion = 1 - introPortion - outroPortion;
@@ -313,17 +303,19 @@ function Rig({
       camZ = THREE.MathUtils.lerp(first.z + cruiseOffset, last.z + cruiseOffset, p);
     }
 
-    const waterWaveX = Math.sin(t * 1.1) * 0.03;
-    const waterWaveY = Math.cos(t * 0.8) * 0.03;
+    // Effet d'ondulation marine subtile sur la caméra
+    const waterWaveX = Math.sin(t * 1.2) * 0.04;
+    const waterWaveY = Math.cos(t * 0.9) * 0.04;
 
     camera.position.z = camZ;
 
-    const targetX = mouse.current.x * (mobile ? 0.1 : 0.3) + waterWaveX;
-    const targetY = 0.1 + mouse.current.y * (mobile ? 0.05 : 0.15) + waterWaveY;
+    // LERP encore plus élevé (0.18) pour une réactivité et une fluidité maximale
+    const targetX = mouse.current.x * (mobile ? 0.1 : 0.35) + waterWaveX;
+    const targetY = 0.1 + mouse.current.y * (mobile ? 0.06 : 0.18) + waterWaveY;
 
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX, 0.18);
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.18);
-    camera.lookAt(camera.position.x * 0.3, 0, camZ - 5.0);
+    camera.lookAt(camera.position.x * 0.4, 0, camZ - 4.4);
 
     let nearestIdx = 0;
     let minScore = Infinity;
@@ -356,31 +348,30 @@ function Rig({
 }
 
 export default function Scene({ items, positions, frameColor, accent, mobile, progressRef, onProject, onActiveIndexChange }: SceneProps) {
-  const maxW = mobile ? 1.4 : 2.5;
-  const maxH = mobile ? 1.8 : 1.9;
-  const fov = mobile ? 38 : 30;
-
-  // Calcul de la profondeur totale prolongée de la scène
-  const extendedDepth = useMemo(() => {
-    if (!positions.length) return 20;
-    return Math.abs(positions[positions.length - 1].z);
-  }, [positions]);
+  const maxW = mobile ? 1.5 : 2.8;
+  const maxH = mobile ? 1.9 : 2.0;
+  const fov = mobile ? 46 : 36;
 
   return (
     <Canvas
       dpr={[1, mobile ? 1.5 : 1.8]}
-      camera={{ fov, position: [0, 0.1, positions[0]?.z + (mobile ? 2.0 : 2.4) || 2] }}
+      camera={{ fov, position: [0, 0.1, positions[0]?.z + (mobile ? 1.6 : 1.8) || 2] }}
       gl={{ antialias: true, alpha: true }}
     >
-      <fog attach="fog" args={[frameColor, 3, 22]} />
-      <ambientLight intensity={0.75} />
-      <directionalLight position={[0, 8, 2]} intensity={0.85} color={accent} />
-      <pointLight position={[0, -2, -12]} intensity={0.4} color={accent} />
+      {/* Brouillard aquatique teinté */}
+      <fog attach="fog" args={[frameColor, 2, 16]} />
+      
+      <ambientLight intensity={0.7} />
+      {/* Lumière supérieure simulant les rayons du soleil perçant la surface */}
+      <directionalLight position={[0, 8, 2]} intensity={0.9} color={accent} />
+      {/* Lueur sous-marine d'ambiance */}
+      <pointLight position={[0, -2, -12]} intensity={0.5} color={accent} />
 
-      {/* Ambiance denses qui couvre l'intégralité du parcours */}
-      <DenseOceanDust count={mobile ? 120 : 300} accent={accent} extendedDepth={extendedDepth} />
-      <DenseOceanAssets positions={positions} accent={accent} />
+      {/* Ambiance sous-marine */}
+      <OceanBubbles count={mobile ? 80 : 180} accent={accent} />
+      <OceanAssets positions={positions} accent={accent} />
 
+      {/* Produits */}
       {items.map((item, i) => (
         <ProductPiece key={item.id} index={i} item={item} pos={positions[i]} maxW={maxW} maxH={maxH} mobile={mobile} />
       ))}

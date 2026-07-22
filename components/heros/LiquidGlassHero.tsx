@@ -48,7 +48,7 @@ function ShaderBackdrop() {
       />
       {/* Voile de lisibilité léger — le shader doit rester la matière visible sous le verre,
          pas être noyé, donc ce voile reste plus discret que sur un fond photo. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
     </div>
   );
 }
@@ -70,24 +70,32 @@ export function LiquidGlassHero({ shop, theme, accent, secondaryImage, waLink }:
   return (
     <div
       ref={rootRef}
-      className="relative w-full overflow-hidden flex flex-col gap-4 px-5 pb-8 min-h-[88svh] md:block md:min-h-0 md:h-[100svh] md:max-h-[960px] md:px-0 md:pb-0"
-      style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}
+      className="relative w-full overflow-hidden flex flex-col justify-between px-5 pb-6 min-h-[100dvh] md:block md:min-h-0 md:h-[100svh] md:max-h-[960px] md:px-0 md:pb-0"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.75rem)' }}
     >
       <ShaderBackdrop />
 
-      {/* Mot géant en filigrane — texture typographique que le flou du verre vient distordre */}
+      {/* Mot géant en filigrane (Desktop - Horizontal) */}
       <span
-        className="hdr-word hidden md:block absolute top-[6%] left-[6%] font-display font-extrabold uppercase select-none pointer-events-none"
+        className="hdr-word hidden md:block absolute top-[6%] left-[6%] font-display font-extrabold uppercase select-none pointer-events-none z-0"
         style={{ fontSize: '11vw', color: 'rgba(255,255,255,0.07)', letterSpacing: '-0.02em', transform: 'rotate(-4deg)' }}
       >
         {shop.name}
       </span>
 
-      <FloatingBlob color={accent} size={420} className="hidden md:block absolute -bottom-24 -left-20 opacity-40" />
-      <LoopRing color={accent} size={150} className="absolute top-6 right-6 md:top-10 md:right-10 opacity-70" />
+      {/* Mot géant en filigrane (Mobile - Vertical) — Remplit élégamment le fond */}
+      <span
+        className="hdr-word md:hidden absolute right-8 top-1/2 -translate-y-1/2 font-display font-extrabold uppercase select-none pointer-events-none z-0 [writing-mode:vertical-lr]"
+        style={{ fontSize: '18vw', color: 'rgba(255,255,255,0.05)', letterSpacing: '0.05em' }}
+      >
+        {shop.name}
+      </span>
 
-      {/* Puce d'identité — verre indépendant, coin haut gauche */}
-      <div className="hdr-visual glass-card flex items-center gap-3 rounded-full pl-2 pr-4 py-2 z-20 w-fit md:absolute md:top-10 md:left-10">
+      <FloatingBlob color={accent} size={420} className="hidden md:block absolute -bottom-24 -left-20 opacity-40" />
+      <LoopRing color={accent} size={150} className="absolute top-10 right-6 md:top-10 md:right-10 opacity-70 pointer-events-none" />
+
+      {/* Puce d'identité — verre indépendant, coin haut gauche (Placée bien sous l'encoche) */}
+      <div className="hdr-visual glass-card flex items-center gap-3 rounded-full pl-2 pr-4 py-2 z-20 w-fit shrink-0 md:absolute md:top-10 md:left-10">
         <ShopLogoRing logo={shop.logo} name={shop.name} ringColor="rgba(255,255,255,0.3)" bg="rgba(255,255,255,0.1)" size={40} />
         <div className="hdr-text flex flex-col">
           <span className="text-[9px] tracking-[0.2em] uppercase" style={{ color: 'rgba(255,255,255,0.6)' }}>
@@ -97,48 +105,53 @@ export function LiquidGlassHero({ shop, theme, accent, secondaryImage, waLink }:
         </div>
       </div>
 
-      {/* Panneau-titre — verre indépendant, légèrement incliné, flotte au centre gauche */}
-      <div className="hdr-visual glass-card glass-card--strong rounded-[28px] p-6 md:p-7 z-20 md:absolute md:top-[24%] md:left-10 md:w-[600px] md:[transform:rotate(-1.2deg)]">
-        <HeaderTextPair
-          small={meta || 'Maroc'}
-          big={shop.name}
-          color="#fff"
-          mutedColor="rgba(255,255,255,0.6)"
-          size="xl"
-          className="hdr-text"
-        />
-      </div>
-
-      {/* Cadre-image — grand panneau de verre, décalé à droite, incliné dans l'autre sens */}
-      {second && (
-        <div className="hdr-visual glass-card glass-card--strong hidden md:block absolute top-[35%] left-[50%] w-80 h-80 rounded-[28px] overflow-hidden -z-121 md:[transform:rotate(2deg)]">
-          <Image src={second} alt="" fill className="object-cover" sizes="360px" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+      {/* Conteneur central sur mobile : Répartit les cartes équitablement sur toute la hauteur */}
+      <div className="flex-1 flex flex-col justify-evenly py-4 z-20 md:contents">
+        {/* Panneau-titre — verre indépendant, légèrement incliné, flotte au centre gauche */}
+        <div className="hdr-visual glass-card glass-card--strong rounded-[28px] p-6 md:p-7 md:absolute md:top-[24%] md:left-10 md:w-[600px] md:[transform:rotate(-1.2deg)]">
+          <HeaderTextPair
+            small={meta || 'Maroc'}
+            big={shop.name}
+            color="#fff"
+            mutedColor="rgba(255,255,255,0.6)"
+            size="xl"
+            className="hdr-text"
+          />
         </div>
-      )}
 
-      {/* Cartel de notes — verre indépendant, bas gauche, loin du panneau-titre */}
-      <div className="hdr-visual glass-card rounded-3xl p-5 md:p-6 z-20 md:absolute md:bottom-14 md:left-10 md:w-[380px]">
-        {shop.description && (
-          <p className="hdr-text text-sm mb-4" style={{ color: 'rgba(255,255,255,0.78)' }}>
-            {shop.description}
-          </p>
-        )}
-        {(shop.reviewsCount ?? 0) > 0 && (
-          <div className="hdr-text flex gap-5 flex-wrap">
-            <RatingItem label="Service" value={shop.serviceRating ?? 0} muted="rgba(255,255,255,0.55)" />
-            <RatingItem label="Communication" value={shop.communicationRating ?? 0} muted="rgba(255,255,255,0.55)" />
-            <RatingItem label="Fiabilité" value={shop.reliabilityRating ?? 0} muted="rgba(255,255,255,0.55)" />
+        {/* Cadre-image — grand panneau de verre, décalé à droite, incliné dans l'autre sens */}
+        {second && (
+          <div className="hdr-visual glass-card glass-card--strong hidden md:block absolute top-[35%] left-[50%] w-80 h-80 rounded-[28px] overflow-hidden -z-121 md:[transform:rotate(2deg)]">
+            <Image src={second} alt="" fill className="object-cover" sizes="360px" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </div>
         )}
+
+        {/* Cartel de notes — verre indépendant, bas gauche, loin du panneau-titre */}
+        <div className="hdr-visual glass-card rounded-3xl p-5 md:p-6 md:absolute md:bottom-14 md:left-10 md:w-[380px]">
+          {shop.description && (
+            <p className="hdr-text text-sm mb-4" style={{ color: 'rgba(255,255,255,0.78)' }}>
+              {shop.description}
+            </p>
+          )}
+          {(shop.reviewsCount ?? 0) > 0 && (
+            <div className="hdr-text flex gap-5 flex-wrap">
+              <RatingItem label="Service" value={shop.serviceRating ?? 0} muted="rgba(255,255,255,0.55)" />
+              <RatingItem label="Communication" value={shop.communicationRating ?? 0} muted="rgba(255,255,255,0.55)" />
+              <RatingItem label="Fiabilité" value={shop.reliabilityRating ?? 0} muted="rgba(255,255,255,0.55)" />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* CTA — flotte seul, bas droite, opposé au cartel de notes */}
-      <WhatsAppCTA
-        waLink={waLink}
-        accent={accent}
-        className="hdr-visual hidden md:inline-flex md:absolute md:bottom-14 md:right-14 z-20"
-      />
+      {/* CTA — flotte seul, bas droite sur desktop, ancré proprement en bas sur mobile */}
+      <div className="w-full shrink-0 z-20 pb-2 md:pb-0 md:w-auto md:absolute md:bottom-14 md:right-14">
+        <WhatsAppCTA
+          waLink={waLink}
+          accent={accent}
+          className="hdr-visual w-full md:w-auto flex justify-center"
+        />
+      </div>
     </div>
   );
 }
