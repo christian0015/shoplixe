@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getTrendingProducts, getNewShops } from '@/lib/public-data';
 import { SearchBar } from '@/components/SearchBar';
 import { CategoryCarousel } from '@/components/CategoryCarousel';
-import { NearbyShopsSection } from '@/components/NearbyShopsSection';
+import  NearbyShopsSection  from '@/components/NearbyShopsSection';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopCard } from '@/components/ShopCard';
 import { themes } from '@/lib/themes';

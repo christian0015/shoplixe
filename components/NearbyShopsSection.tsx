@@ -6,7 +6,7 @@ import { searchNearby } from '@/lib/search-actions';
 import { ShopCard } from '@/components/ShopCard';
 import type { ShopSearchResult } from '@/types';
 
-export function NearbyShopsSection() {
+export default function NearbyShopsSection() {
   const [shops, setShops] = useState<ShopSearchResult[] | null>(null);
 
   useEffect(() => {
