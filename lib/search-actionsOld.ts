@@ -56,25 +56,23 @@ export async function searchProducts(
   await connectDB();
 
   let shopIds: string[] | undefined;
-  if ((filters.category && filters.category !== 'all') || (filters.city && filters.city.trim())) {
+  if ((filters.category && filters.category !== 'all') || filters.city) {
     const shopFilter: Record<string, unknown> = {};
     if (filters.category && filters.category !== 'all') shopFilter.category = filters.category;
-    if (filters.city && filters.city.trim()) shopFilter.city = new RegExp(`.*${(await getSmartCityMatch(filters.city)).trim()}.*`, 'i');
+    if (filters.city) shopFilter.city = new RegExp(`^${await getSmartCityMatch(filters.city)}$`, 'i');
 
     const shops = await Shop.find(shopFilter).select('_id').lean();
     shopIds = shops.map((s) => String((s as { _id: unknown })._id));
     if (shopIds.length === 0) return [];
   }
 
-  const cleanQuery = query ? query.trim() : '';
-
-  if (cleanQuery) {
+  if (query && query.trim()) {
     const pipeline: any[] = [
       {
         $search: {
           index: 'default',
           text: {
-            query: cleanQuery,
+            query: query.trim(),
             path: ['name', 'description', 'category', 'subcategory', 'tags'],
             fuzzy: { maxEdits: 2, prefixLength: 1 },
           },
@@ -107,14 +105,12 @@ export async function searchShops(
 
   const filter: Record<string, unknown> = {};
   if (filters.category && filters.category !== 'all') filter.category = filters.category;
-  if (filters.city && filters.city.trim()) filter.city = new RegExp(`.*${(await getSmartCityMatch(filters.city)).trim()}.*`, 'i');
-  
-  const cleanQuery = query ? query.trim() : '';
-  if (cleanQuery) filter.$text = { $search: cleanQuery };
+  if (filters.city) filter.city = new RegExp(`^${await getSmartCityMatch(filters.city)}$`, 'i');
+  if (query && query.trim()) filter.$text = { $search: query.trim() };
 
   const shopsQuery = Shop.find(filter).limit(40);
   const shops =
-    cleanQuery
+    query && query.trim()
       ? await shopsQuery.select({ score: { $meta: 'textScore' } }).sort({ score: { $meta: 'textScore' } }).lean()
       : await shopsQuery.sort({ rating: -1, createdAt: -1 }).lean();
 
@@ -163,15 +159,14 @@ export async function searchNearbyProducts(
 
   await connectDB();
   const shopObjIds = nearbyShops.map((s) => new mongoose.Types.ObjectId(s._id));
-  const cleanQuery = query ? query.trim() : '';
 
-  if (cleanQuery) {
+  if (query && query.trim()) {
     const pipeline: any[] = [
       {
         $search: {
           index: 'default',
           text: {
-            query: cleanQuery,
+            query: query.trim(),
             path: ['name', 'description', 'category', 'subcategory', 'tags'],
             fuzzy: { maxEdits: 2, prefixLength: 1 },
           },

@@ -16,6 +16,7 @@
     "@react-three/postprocessing": "^3.0.4",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
+    "fast-levenshtein": "^3.0.0",
     "gsap": "^3.12.5",
     "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/fast-levenshtein": "^0.0.4",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.7.5",
     "@types/react": "^19.0.0",

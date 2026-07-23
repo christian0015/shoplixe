@@ -1,4 +1,3 @@
-// components/NearMeToggle.tsx
 'use client';
 
 import { useState } from 'react';
@@ -9,13 +8,18 @@ export function NearMeToggle() {
   const searchParams = useSearchParams();
   const isActive = searchParams.get('near') === 'true';
   const [status, setStatus] = useState<'idle' | 'locating' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const activate = () => {
     if (!navigator.geolocation) {
+      setErrorMessage('La géolocalisation n’est pas supportée par votre navigateur.');
       setStatus('error');
       return;
     }
+
     setStatus('locating');
+    setErrorMessage('');
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -25,8 +29,28 @@ export function NearMeToggle() {
         setStatus('idle');
         router.push(`/search?${params.toString()}`);
       },
-      () => setStatus('error'),
-      { timeout: 8000 }
+      (error) => {
+        setStatus('error');
+        // Diagnostic précis des erreurs Safari
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setErrorMessage('Permission refusée. Autorisez la localisation dans les réglages de votre navigateur.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setErrorMessage('Signal GPS indisponible. Réessayez.');
+            break;
+          case error.TIMEOUT:
+            setErrorMessage('Délai d’attente dépassé. Réessayez.');
+            break;
+          default:
+            setErrorMessage('Erreur de localisation.');
+        }
+      },
+      {
+        enableHighAccuracy: true, // Requis sur mobile/iOS pour forcer le composant GPS[cite: 2]
+        timeout: 10000,           // 10 secondes pour laisser le temps au mobile[cite: 2]
+        maximumAge: 60000,        // Accepte une position en cache datant de moins d'1 minute[cite: 2]
+      }
     );
   };
 
@@ -35,24 +59,31 @@ export function NearMeToggle() {
     params.delete('near');
     params.delete('lat');
     params.delete('lng');
+    setStatus('idle');
+    setErrorMessage('');
     router.push(`/search?${params.toString()}`);
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={isActive ? deactivate : activate}
-        disabled={status === 'locating'}
-        className={
-          isActive
-            ? 'px-4 py-1.5 rounded-full text-sm font-medium bg-orange text-white'
-            : 'px-4 py-1.5 rounded-full text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200'
-        }
-      >
-        {status === 'locating' ? 'Localisation...' : isActive ? '📍 Près de moi (activé)' : '📍 Près de moi'}
-      </button>
-      {status === 'error' && (
-        <span className="text-xs text-red-500">Localisation indisponible — vérifiez les permissions.</span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={isActive ? deactivate : activate}
+          disabled={status === 'locating'}
+          className={
+            isActive
+              ? 'px-4 py-1.5 rounded-full text-sm font-medium bg-orange text-white'
+              : 'px-4 py-1.5 rounded-full text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200'
+          }
+        >
+          {status === 'locating' ? 'Recherche GPS...' : isActive ? '📍 Près de moi (activé)' : '📍 Près de moi'}
+        </button>
+      </div>
+
+      {status === 'error' && errorMessage && (
+        <span className="text-xs text-red-500 font-medium max-w-xs leading-tight">
+          {errorMessage}
+        </span>
       )}
     </div>
   );
