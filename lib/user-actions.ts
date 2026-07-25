@@ -6,9 +6,6 @@ import { connectDB } from '@/lib/db';
 import { requireSession } from '@/lib/session';
 import { uploadImage } from '@/lib/cloudinary';
 import User from '@/models/User';
-// 🛑 AJOUTEZ CES DEUX IMPORTS 🛑
-// Ils forcent Next.js et Mongoose à enregistrer les modèles "Shop" et "Product"
-// dans le registre Mongoose avant que le .populate() n'échoue.
 import Shop from '@/models/Shop'; 
 import Product from '@/models/Product';
 
@@ -62,8 +59,15 @@ export async function getFavorites() {
   await connectDB();
 
   const user = await User.findById(session.userId)
-    .populate('favorites.shops')
-    .populate({ path: 'favorites.products', populate: { path: 'shop', select: 'slug name' } })
+    .populate({
+      path: 'favorites.shops',
+      model: Shop,
+    })
+    .populate({
+      path: 'favorites.products',
+      model: Product,
+      populate: { path: 'shop', model: Shop, select: 'slug name' },
+    })
     .lean() as unknown as { favorites: unknown } | null;
 
   if (!user) return { shops: [], products: [] };
@@ -94,7 +98,11 @@ export async function getHistory() {
   await connectDB();
 
   const user = await User.findById(session.userId)
-    .populate({ path: 'history.product', populate: { path: 'shop', select: 'slug name' } })
+    .populate({
+      path: 'history.product',
+      model: Product,
+      populate: { path: 'shop', model: Shop, select: 'slug name' },
+    })
     .lean() as unknown as { history: unknown[] } | null;
 
   if (!user) return [];
