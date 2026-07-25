@@ -13,6 +13,21 @@ const NAV_TABS = [
   { href: '/account/history', label: 'Historique' },
 ];
 
+function SiteBar() {
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <Link href="/" className="font-serif-editorial text-lg italic text-stone-900">
+        Shoplixe<span className="text-[#E25B38]">.</span>
+      </Link>
+      <div className="flex items-center gap-5 text-sm font-medium text-stone-500">
+        <Link href="/" className="hover:text-stone-900 transition-colors">Accueil</Link>
+        <Link href="/explore" className="hover:text-stone-900 transition-colors">Explorer</Link>
+        <Link href="/search" className="hover:text-stone-900 transition-colors">Rechercher</Link>
+      </div>
+    </div>
+  );
+}
+
 function AccountNav({ active }: { active: string }) {
   return (
     <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1 mb-10">
@@ -46,6 +61,7 @@ export default async function AccountPage() {
   return (
     <main className="min-h-screen bg-[#fafaf8] px-4 py-10 md:py-14">
       <div className="max-w-2xl mx-auto">
+        <SiteBar />
         <AccountNav active="/account" />
 
         <header className="mb-8">
