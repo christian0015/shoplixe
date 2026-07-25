@@ -80,11 +80,11 @@ export function LandingHero() {
         </div>
         
         <nav className="flex items-center gap-6">
-          <Link href="/login" className="text-sm font-medium text-stone-600 hover:text-stone-950 transition-colors">
+          <Link href="/dashboard" className="text-sm font-medium text-stone-600 hover:text-stone-950 transition-colors">
             Se connecter
           </Link>
           <Link
-            href="/signup"
+            href="/dashboard"
             className="px-5 py-2.5 rounded-full bg-stone-900 text-stone-100 text-xs font-semibold uppercase tracking-wider hover:bg-stone-800 transition-all shadow-md"
           >
             Créer ma vitrine
@@ -112,7 +112,7 @@ export function LandingHero() {
 
           <div className="hero-cta flex items-center gap-4 flex-wrap pt-2">
             <Link
-              href="/signup"
+              href="/dashboard"
               className="px-8 py-4 rounded-full bg-[#2e5e4d] text-white font-semibold text-sm hover:bg-[#518c76] transition-all shadow-xl shadow-[#5ac9a2]/20 hover:scale-[1.02]"
             >
               Lancer votre boutique
