@@ -6,6 +6,11 @@ import { connectDB } from '@/lib/db';
 import { requireSession } from '@/lib/session';
 import { uploadImage } from '@/lib/cloudinary';
 import User from '@/models/User';
+// 🛑 AJOUTEZ CES DEUX IMPORTS 🛑
+// Ils forcent Next.js et Mongoose à enregistrer les modèles "Shop" et "Product"
+// dans le registre Mongoose avant que le .populate() n'échoue.
+import Shop from '@/models/Shop'; 
+import Product from '@/models/Product';
 
 const HISTORY_LIMIT = 50;
 
