@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+'use client';import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle } from 'ogl';
 import './Grainient.css';
 

@@ -1,16 +1,16 @@
 // app/search/page.tsx
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { searchProducts, searchShops, searchNearby, searchNearbyProducts } from '@/lib/search-actions';
-import { SearchBar } from '@/components/SearchBar';
-import { NearMeToggle } from '@/components/NearMeToggle';
-import { CityFilter } from '@/components/CityFilter';
-import { ShopCard } from '@/components/ShopCard';
-import { ProductCard } from '@/components/ProductCard';
-import { themes } from '@/lib/themes';
-import { CATEGORY_LABELS, type ShopCategory } from '@/types';
+import { SearchRadarCanvas } from '@/components/search/SearchRadarCanvas';
+import { SearchControlHeader } from '@/components/search/SearchControlHeader';
+import { SearchProductCard } from '@/components/search/SearchProductCard';
+import { SearchShopCard } from '@/components/search/SearchShopCard';
+import type { ShopCategory, ProductSearchResult, ShopSearchResult } from '@/types';
 
-export const metadata = { title: 'Résultats de recherche — VitrineMa' };
+export const metadata = {
+  title: 'Radar de Créateurs — Shoplixe',
+  description: 'Immersion dans le réseau de boutiques indépendantes et ateliers certifiés du Maroc.',
+};
 
 export default async function SearchPage({
   searchParams,
@@ -27,75 +27,86 @@ export default async function SearchPage({
   const products =
     tab === 'products'
       ? isNear && lat && lng
-        ? await searchNearbyProducts(lat, lng, 15, category, params.q)
+        ? await searchNearbyProducts(lat, lng, 25, category, params.q)
         : await searchProducts(params.q ?? '', { category, city: params.city })
       : [];
 
   const shops =
     tab === 'shops'
       ? isNear && lat && lng
-        ? await searchNearby(lat, lng, 15, category)
+        ? await searchNearby(lat, lng, 25, category)
         : await searchShops(params.q ?? '', { category, city: params.city })
       : [];
 
   const resultsCount = tab === 'products' ? products.length : shops.length;
 
   return (
-    <main className="max-w-4xl mx-auto px-4 pb-10">
-      <Suspense fallback={null}>
-        <SearchBar />
-      </Suspense>
+    <div className="relative min-h-screen text-[#FAF8F5] pb-24">
+      {/* 1. Ondulations MagicRings omniprésentes en arrière-plan */}
+      <SearchRadarCanvas isSearching={Boolean(params.q)} />
 
-      <div className="flex items-center justify-between flex-wrap gap-2 mt-4 mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          {category !== 'all' && (
-            <Link
-              href={`/search?tab=${tab}`}
-              className="px-3 py-1 rounded-full bg-stone-100 text-sm text-stone-600 flex items-center gap-1"
-            >
-              {CATEGORY_LABELS[category]} ✕
-            </Link>
-          )}
+      {/* 2. Contenu principal flottant */}
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pt-12 space-y-10">
+        
+        {/* En-tête Éditorial */}
+        <div className="space-y-3">
+          <span className="text-xs font-mono uppercase tracking-widest text-[#FF9FFC]">
+            [ Radar de Découverte ]
+          </span>
+          <h1 className="font-serif-editorial italic text-4xl sm:text-5xl font-normal">
+            Le réseau des créateurs d’exception.
+          </h1>
+          <p className="text-stone-400 font-sans text-sm md:text-base font-light max-w-xl">
+            En prise directe avec les ateliers authentiques. Zéro contrefaçon, qualité certifiée par la communauté.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Suspense fallback={null}>
-            <CityFilter />
-          </Suspense>
-          <Suspense fallback={null}>
-            <NearMeToggle />
-          </Suspense>
-        </div>
-      </div>
 
-      <p className="text-sm text-stone-400 mb-3">
-        {resultsCount} résultat{resultsCount > 1 ? 's' : ''} {isNear ? 'près de vous' : ''}
-      </p>
+        {/* Console de Contrôle (Barre, Filtres, GPS) */}
+        <Suspense fallback={<div className="h-24 rounded-full bg-white/5 animate-pulse" />}>
+          <SearchControlHeader />
+        </Suspense>
 
-      {tab === 'products' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              shopSlug={product.shop.slug}
-              theme={themes.minimal}
-              isAuthenticated={false}
-            />
-          ))}
-          {products.length === 0 && (
-            <p className="col-span-full text-center text-stone-400 py-10">Aucun produit ne correspond à votre recherche.</p>
-          )}
+        {/* Indicateur de résultats */}
+        <div className="flex items-center justify-between border-b border-white/10 pb-4 text-xs font-mono text-stone-400">
+          <span>
+            {resultsCount} {tab === 'products' ? 'CRÉATION(S)' : 'STUDIO(S)'} DÉTECTÉ(S)
+          </span>
+          {isNear && <span className="text-[#A855F7]">● PERIMÈTRE GPS ACTIF</span>}
         </div>
-      ) : (
-        <div className="grid gap-3">
-          {shops.map((shop) => (
-            <ShopCard key={shop._id} shop={shop} />
-          ))}
-          {shops.length === 0 && (
-            <p className="text-center text-stone-400 py-10">Aucune boutique ne correspond à votre recherche.</p>
-          )}
-        </div>
-      )}
-    </main>
+
+        {/* Grille de résultats */}
+        {tab === 'products' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            {(products as unknown as ProductSearchResult[]).map((product) => (
+              <SearchProductCard key={product._id} product={product} />
+            ))}
+            {products.length === 0 && (
+              <div className="col-span-full text-center py-20 space-y-3">
+                <p className="font-serif-editorial italic text-2xl text-stone-400">
+                  Aucune création ne répond à ce signal.
+                </p>
+                <p className="text-xs font-mono text-stone-500 uppercase">
+                  Essayez d'élargir votre recherche ou de réinitialiser vos filtres.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(shops as unknown as ShopSearchResult[]).map((shop) => (
+              <SearchShopCard key={shop._id} shop={shop} />
+            ))}
+            {shops.length === 0 && (
+              <div className="col-span-full text-center py-20 space-y-3">
+                <p className="font-serif-editorial italic text-2xl text-stone-400">
+                  Aucun studio localisé dans ce secteur.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </main>
+    </div>
   );
 }
