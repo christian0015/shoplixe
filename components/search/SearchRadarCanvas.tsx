@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
-const MagicRings = dynamic(() => import('@/components/reactBits/MagicRings'), {
+const MagicRings = dynamic(() => import('@/components/reactbits/MagicRings'), {
   ssr: false,
   loading: () => <div className="absolute inset-0 bg-[#09080A]" />,
 });
