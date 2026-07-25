@@ -9,7 +9,7 @@ export function ShopCard({ shop }: { shop: ShopSearchResult }) {
   return (
     <Link
       href={`/${shop.slug}`}
-      className="flex gap-3 rounded-2xl border border-stone-200 p-3 hover:border-stone-300 transition-colors"
+      className="bento-cell flex gap-3 rounded-2xl border border-stone-200 bg-white p-3 hover:border-stone-300 hover:shadow-sm transition-all"
     >
       <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-stone-100 shrink-0">
         {shop.logo ? (
@@ -21,7 +21,7 @@ export function ShopCard({ shop }: { shop: ShopSearchResult }) {
 
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <p className="font-medium truncate">{shop.name}</p>
+          <p className="font-medium truncate text-stone-900">{shop.name}</p>
           {shop.isVerified && <Badge variant="verified">✓</Badge>}
         </div>
 

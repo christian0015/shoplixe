@@ -19,7 +19,8 @@ export function ClearHistoryButton() {
   };
 
   return (
-    <Button variant="ghost" onClick={handleClick} disabled={isPending}>
+    <Button variant="ghost" onClick={handleClick} disabled={isPending}
+      className="px-4 py-2 rounded-full text-sm font-medium text-stone-500 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60">
       {isPending ? 'Suppression...' : 'Tout supprimer'}
     </Button>
   );

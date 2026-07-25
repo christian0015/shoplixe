@@ -1,4 +1,5 @@
 // app/dashboard/[shopId]/settings/page.tsx
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { connectDB } from '@/lib/db';
@@ -20,13 +21,22 @@ export default async function ShopSettingsPage({ params }: { params: Promise<{ s
   const initial = JSON.parse(JSON.stringify(shop));
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10 space-y-10">
-      <h1 className="font-display font-bold text-2xl">Paramètres de la boutique</h1>
-      <ShopForm initial={{ ...initial, _id: shopId }} />
+    <main className="min-h-screen bg-[#fafaf8] px-4 py-10 md:py-14">
+      <div className="max-w-2xl mx-auto space-y-10">
+        <div>
+          <Link href={`/dashboard/${shopId}`} className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
+            ← Retour à la boutique
+          </Link>
+          <h1 className="font-serif-editorial italic text-3xl md:text-4xl text-stone-900 mt-4">Paramètres de la boutique</h1>
+        </div>
 
-      <div className="border-t border-stone-200 pt-6">
-        <h2 className="font-medium text-red-600 mb-2">Zone de danger</h2>
-        <DeleteShopButton shopId={shopId} />
+        <ShopForm initial={{ ...initial, _id: shopId }} />
+
+        <div className="rounded-3xl border border-red-100 bg-red-50/50 p-6">
+          <h2 className="font-semibold text-red-600 mb-1">Zone de danger</h2>
+          <p className="text-sm text-red-500/80 mb-4">Cette action est définitive et irréversible.</p>
+          <DeleteShopButton shopId={shopId} />
+        </div>
       </div>
     </main>
   );

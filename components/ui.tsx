@@ -8,6 +8,10 @@ export function cn(...classes: (string | false | null | undefined)[]) {
 }
 
 // --- Button ---
+// primary = actions de conversion (vert, comme le CTA de la landing)
+// secondary = actions neutres (noir stone-900)
+// ghost = actions discrètes / annuler
+// danger = actions destructrices
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,17 +19,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: 'bg-orange text-white hover:opacity-90',
-  secondary: 'bg-stone-900 text-white hover:opacity-90',
-  ghost: 'bg-transparent border border-stone-300 text-stone-900 hover:bg-stone-100',
-  danger: 'bg-red-600 text-white hover:opacity-90',
+  primary: 'bg-[#2e5e4d] text-white hover:bg-[#518c76] shadow-sm shadow-[#5ac9a2]/20',
+  secondary: 'bg-stone-900 text-stone-100 hover:bg-stone-800',
+  ghost: 'bg-transparent border border-stone-300 text-stone-700 hover:bg-stone-100 hover:border-stone-400',
+  danger: 'bg-red-600 text-white hover:bg-red-700',
 };
 
 export function Button({ variant = 'primary', className, ...props }: ButtonProps) {
   return (
     <button
       className={cn(
-        'px-5 py-2.5 rounded-xl font-medium text-sm transition disabled:opacity-50 disabled:cursor-not-allowed',
+        'px-5 py-2.5 rounded-full font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed',
         buttonVariants[variant],
         className
       )}
@@ -52,7 +56,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         ref={ref}
         id={id}
         className={cn(
-          'w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm outline-none focus:ring-2 focus:ring-orange/40 focus:border-orange transition',
+          'w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-white text-sm text-stone-900 placeholder-stone-400 outline-none focus:ring-2 focus:ring-[#2e5e4d]/25 focus:border-[#2e5e4d] transition disabled:bg-stone-50 disabled:text-stone-400',
           className
         )}
         {...props}
@@ -75,7 +79,7 @@ export function Select({ label, className, id, children, ...props }: SelectProps
       <select
         id={id}
         className={cn(
-          'w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm outline-none focus:ring-2 focus:ring-orange/40 focus:border-orange transition',
+          'w-full px-4 py-2.5 rounded-2xl border border-stone-200 bg-white text-sm text-stone-900 outline-none focus:ring-2 focus:ring-[#2e5e4d]/25 focus:border-[#2e5e4d] transition',
           className
         )}
         {...props}
@@ -87,13 +91,15 @@ export function Select({ label, className, id, children, ...props }: SelectProps
 }
 
 // --- Badge ---
+// promo/accent garde l'orange de la marque (prix, mise en avant) ;
+// le reste reste neutre pour ne pas diluer l'accent.
 type BadgeVariant = 'default' | 'verified' | 'promo' | 'sold-out';
 
 const badgeVariants: Record<BadgeVariant, string> = {
-  default: 'bg-stone-100 text-stone-700',
-  verified: 'bg-blue-100 text-blue-700',
+  default: 'bg-stone-100 text-stone-600',
+  verified: 'bg-[#2e5e4d]/10 text-[#2e5e4d]',
   promo: 'bg-orange/15 text-orange',
-  'sold-out': 'bg-stone-900/80 text-white',
+  'sold-out': 'bg-stone-900/85 text-white',
 };
 
 export function Badge({
@@ -137,12 +143,12 @@ export function Toggle({
         onClick={() => onChange(!checked)}
         className={cn(
           'relative w-11 h-6 rounded-full transition-colors',
-          checked ? 'bg-orange' : 'bg-stone-300'
+          checked ? 'bg-[#2e5e4d]' : 'bg-stone-300'
         )}
       >
         <span
           className={cn(
-            'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform',
+            'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform',
             checked && 'translate-x-5'
           )}
         />

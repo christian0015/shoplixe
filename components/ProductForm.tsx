@@ -73,7 +73,10 @@ export function ProductForm({ shopId, initial }: { shopId: string; initial?: Pro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-3xl border border-stone-200 bg-white/70 backdrop-blur-sm shadow-sm p-6 md:p-8 space-y-5 max-w-xl"
+    >
       <Input label="Nom du produit" value={form.name} onChange={(e) => update('name', e.target.value)} required />
       <div className="grid grid-cols-2 gap-3">
         <Input
@@ -97,7 +100,7 @@ export function ProductForm({ shopId, initial }: { shopId: string; initial?: Pro
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
           rows={3}
-          className="px-4 py-2.5 rounded-xl border border-stone-300 text-sm outline-none focus:ring-2 focus:ring-orange/40 font-normal"
+          className="px-4 py-2.5 rounded-2xl border border-stone-200 bg-white text-sm outline-none focus:ring-2 focus:ring-[#2e5e4d]/25 focus:border-[#2e5e4d] font-normal transition"
         />
       </label>
 
@@ -116,32 +119,35 @@ export function ProductForm({ shopId, initial }: { shopId: string; initial?: Pro
         <p className="text-sm font-medium text-stone-700">Images</p>
         <div className="flex gap-2 flex-wrap">
           {form.images.map((url, i) => (
-            <div key={url} className="relative w-20 h-20 rounded-xl overflow-hidden bg-stone-100">
+            <div key={url} className="relative w-20 h-20 rounded-2xl overflow-hidden bg-stone-100 ring-1 ring-stone-200">
               <Image src={url} alt="" fill className="object-cover" />
               <button
                 type="button"
                 onClick={() => update('images', form.images.filter((_, idx) => idx !== i))}
-                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 text-white rounded-full text-xs"
+                className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black/60 text-white rounded-full text-xs leading-none"
               >
                 ×
               </button>
             </div>
           ))}
+          <label className="w-20 h-20 rounded-2xl border border-dashed border-stone-300 flex items-center justify-center text-stone-400 text-xs cursor-pointer hover:border-[#2e5e4d] hover:text-[#2e5e4d] transition-colors text-center px-1">
+            + Ajouter
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
+            />
+          </label>
         </div>
-        <label className="text-sm underline cursor-pointer text-stone-600">
-          Ajouter des photos
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => setNewFiles(Array.from(e.target.files ?? []))}
-          />
-        </label>
         {newFiles.length > 0 && <p className="text-xs text-stone-400">{newFiles.length} fichier(s) prêt(s) à l&apos;envoi</p>}
       </div>
 
-      <Toggle checked={form.available} onChange={(v) => update('available', v)} label="Disponible à la vente" />
+      <div className="flex items-center justify-between rounded-2xl bg-stone-50 border border-stone-100 px-4 py-3">
+        <span className="text-sm text-stone-700">Disponible à la vente</span>
+        <Toggle checked={form.available} onChange={(v) => update('available', v)} />
+      </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

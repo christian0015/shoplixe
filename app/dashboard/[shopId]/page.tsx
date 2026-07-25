@@ -27,31 +27,39 @@ export default async function ShopAdminPage({ params }: { params: Promise<{ shop
   return (
     <main className="min-h-screen bg-[#111] text-white px-4 py-8">
       <div className="max-w-3xl mx-auto space-y-6">
+        <Link href="/dashboard" className="inline-block text-xs font-mono text-stone-400 hover:text-white transition-colors">
+          ← Mes boutiques
+        </Link>
+
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display font-bold text-xl">{shopDoc.name}</h1>
+            <h1 className="font-serif-editorial italic text-2xl text-white">{shopDoc.name}</h1>
             <a href={`/${shopDoc.slug}`} target="_blank" rel="noreferrer" className="text-xs text-stone-400 underline">
               Voir la vitrine publique
             </a>
             {shopDoc.reviewsCount > 0 && (
-              <p className="text-xs text-stone-500 mt-1">
+              <p className="text-xs text-stone-500 mt-1 font-mono">
                 ⭐ {shopDoc.rating.toFixed(1)} ({shopDoc.reviewsCount} avis) — Service {shopDoc.serviceRating.toFixed(1)} · Communication{' '}
                 {shopDoc.communicationRating.toFixed(1)} · Fiabilité {shopDoc.reliabilityRating.toFixed(1)}
               </p>
             )}
           </div>
           <div className="flex gap-2">
-            <Link href={`/dashboard/${shopId}/settings`} className="px-4 py-2 rounded-xl border border-stone-700 text-sm">
+            <Link href={`/dashboard/${shopId}/settings`} className="px-4 py-2 rounded-full border border-white/15 text-sm hover:bg-white/5 transition-colors">
               Paramètres
             </Link>
-            <Link href={`/dashboard/${shopId}/products/new`} className="px-4 py-2 rounded-xl bg-orange text-sm font-medium">
+            <Link href={`/dashboard/${shopId}/products/new`} className="px-4 py-2 rounded-full bg-[#E25B38] text-sm font-semibold hover:bg-[#c94b2b] transition-colors">
               Ajouter un produit
             </Link>
           </div>
         </div>
 
         <div className="space-y-2">
-          {products.length === 0 && <p className="text-stone-500 text-sm">Aucun produit — ajoutez-en un pour commencer.</p>}
+          {products.length === 0 && (
+            <p className="text-stone-500 text-sm rounded-2xl border border-dashed border-white/10 py-8 text-center">
+              Aucun produit — ajoutez-en un pour commencer.
+            </p>
+          )}
           {products.map((product: {
             _id: string; name: string; price: number; promoPrice: number | null;
             images: string[]; available: boolean; slug: string;

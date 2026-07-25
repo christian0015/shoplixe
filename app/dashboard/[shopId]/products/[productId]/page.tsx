@@ -1,4 +1,5 @@
 // app/dashboard/[shopId]/products/[productId]/page.tsx
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { connectDB } from '@/lib/db';
@@ -25,9 +26,14 @@ export default async function EditProductPage({
   const initial = JSON.parse(JSON.stringify(product));
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
-      <h1 className="font-display font-bold text-2xl mb-6">Modifier le produit</h1>
-      <ProductForm shopId={shopId} initial={{ ...initial, _id: productId }} />
+    <main className="min-h-screen bg-[#fafaf8] px-4 py-10 md:py-14">
+      <div className="max-w-2xl mx-auto">
+        <Link href={`/dashboard/${shopId}`} className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
+          ← Retour à la boutique
+        </Link>
+        <h1 className="font-serif-editorial italic text-3xl md:text-4xl text-stone-900 mt-4 mb-8">Modifier le produit</h1>
+        <ProductForm shopId={shopId} initial={{ ...initial, _id: productId }} />
+      </div>
     </main>
   );
 }

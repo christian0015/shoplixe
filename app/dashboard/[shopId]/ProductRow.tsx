@@ -39,17 +39,17 @@ export function ProductRow({ product, shopId }: { product: Product; shopId: stri
   };
 
   return (
-    <div className="flex items-center gap-3 bg-[#1a1a1a] rounded-xl p-3">
-      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-stone-800 shrink-0">
+    <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/5 rounded-2xl p-3 hover:border-white/10 transition-colors">
+      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-stone-800 shrink-0">
         {product.images[0] && <Image src={product.images[0]} alt={product.name} fill className="object-cover" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{product.name}</p>
+        <p className="text-sm font-medium truncate text-white">{product.name}</p>
         <p className="text-xs text-stone-400 font-mono">
           {product.promoPrice ? (
             <>
               <span className="line-through mr-1">{product.price} MAD</span>
-              {product.promoPrice} MAD
+              <span className="text-[#E25B38]">{product.promoPrice} MAD</span>
             </>
           ) : (
             `${product.price} MAD`
@@ -57,10 +57,10 @@ export function ProductRow({ product, shopId }: { product: Product; shopId: stri
         </p>
       </div>
       <Toggle checked={available} onChange={handleToggle} />
-      <Link href={`/dashboard/${shopId}/products/${product._id}`} className="text-xs underline text-stone-300">
+      <Link href={`/dashboard/${shopId}/products/${product._id}`} className="text-xs font-medium text-stone-300 hover:text-white transition-colors">
         Modifier
       </Link>
-      <button onClick={handleDelete} disabled={isPending} className="text-xs text-red-400 underline">
+      <button onClick={handleDelete} disabled={isPending} className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors">
         Supprimer
       </button>
     </div>

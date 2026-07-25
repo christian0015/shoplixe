@@ -78,7 +78,10 @@ export function ShopForm({ initial }: { initial?: ShopFormData }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-3xl border border-stone-200 bg-white/70 backdrop-blur-sm shadow-sm p-6 md:p-8 space-y-5 max-w-xl"
+    >
       <Input label="Nom de la boutique" value={form.name} onChange={(e) => update('name', e.target.value)} required />
       <Input
         label="Lien (slug)"
@@ -93,7 +96,7 @@ export function ShopForm({ initial }: { initial?: ShopFormData }) {
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
           rows={3}
-          className="px-4 py-2.5 rounded-xl border border-stone-300 text-sm outline-none focus:ring-2 focus:ring-orange/40 font-normal"
+          className="px-4 py-2.5 rounded-2xl border border-stone-200 bg-white text-sm outline-none focus:ring-2 focus:ring-[#2e5e4d]/25 focus:border-[#2e5e4d] font-normal transition"
         />
       </label>
 
@@ -121,14 +124,18 @@ export function ShopForm({ initial }: { initial?: ShopFormData }) {
         Couleur d&apos;accent (optionnel)
         <input
           type="color"
-          value={form.accentColor ?? '#FF6B35'}
+          value={form.accentColor ?? '#E25B38'}
           onChange={(e) => update('accentColor', e.target.value)}
-          className="w-16 h-10 rounded-lg border border-stone-300"
+          className="w-16 h-10 rounded-xl border border-stone-200 cursor-pointer"
         />
       </label>
 
-      <ImageUploadField label="Logo" value={form.logo} onChange={(url) => update('logo', url)} />
-      <ImageUploadField label="Cover" value={form.cover} onChange={(url) => update('cover', url)} />
+      <div className="grid grid-cols-2 gap-3">
+        <ImageUploadField label="Logo" value={form.logo} onChange={(url) => update('logo', url)} />
+        <ImageUploadField label="Cover" value={form.cover} onChange={(url) => update('cover', url)} />
+      </div>
+
+      <div className="h-px bg-stone-100" />
 
       <Input
         label="Numéro WhatsApp (format international)"
@@ -186,15 +193,17 @@ function ImageUploadField({
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-stone-700">{label}</p>
-      {preview && (
-        <div className="relative w-full h-32 rounded-xl overflow-hidden bg-stone-100">
-          <Image src={preview} alt={label} fill className="object-cover" />
+      <label className="block cursor-pointer group">
+        <div className="relative w-full h-28 rounded-2xl overflow-hidden bg-stone-50 border border-dashed border-stone-300 group-hover:border-[#2e5e4d] transition-colors flex items-center justify-center">
+          {preview ? (
+            <Image src={preview} alt={label} fill className="object-cover" />
+          ) : (
+            <span className="text-xs text-stone-400 group-hover:text-[#2e5e4d] transition-colors">Ajouter une image</span>
+          )}
         </div>
-      )}
-      <label className="text-sm underline cursor-pointer text-stone-600">
-        {uploading ? 'Envoi...' : preview ? 'Changer' : 'Ajouter une image'}
         <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
       </label>
+      {uploading && <p className="text-xs text-stone-400">Envoi en cours...</p>}
     </div>
   );
 }
