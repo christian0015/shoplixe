@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { connectDB } from '@/lib/db';
 import { requireSession } from '@/lib/session';
-import { uploadImage } from '@/lib/cloudinary';
+import { uploadImage, deleteImage } from '@/lib/cloudinary';
 import User from '@/models/User';
 import Shop from '@/models/Shop'; 
 import Product from '@/models/Product';
@@ -16,7 +16,12 @@ export async function updateProfile(data: { name?: string; phone?: string; newsl
   await connectDB();
 
   const update: Record<string, unknown> = { ...data };
-  if (avatarForm) update.avatar = await uploadImage(avatarForm);
+
+  if (avatarForm) {
+    const current = await User.findById(session.userId).select('avatar');
+    update.avatar = await uploadImage(avatarForm);
+    if (current?.avatar) await deleteImage(current.avatar);
+  }
 
   await User.findByIdAndUpdate(session.userId, update);
   revalidatePath('/account');

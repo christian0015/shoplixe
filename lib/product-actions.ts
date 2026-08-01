@@ -58,6 +58,14 @@ export async function updateProduct(productId: string, data: Partial<ProductInpu
     for (const fd of imageFiles) uploadedUrls.push(await uploadImage(fd));
   }
 
+  // Toute image présente avant mais absente du nouveau tableau envoyé
+  // (retirée via le "×" côté client) est supprimée de Cloudinary.
+  if (data.images) {
+    const nextImages = data.images;
+    const removed = (product.images as string[]).filter((img) => !nextImages.includes(img));
+    for (const img of removed) await deleteImage(img);
+  }
+
   Object.assign(product, data);
   if (uploadedUrls.length) product.images = [...product.images, ...uploadedUrls];
   await product.save();

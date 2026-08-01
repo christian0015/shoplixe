@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import Image from 'next/image';
 import { Input, Toggle } from '@/components/ui';
 import { updateProfile } from '@/lib/user-actions';
+import { logoutUser, deleteAccount } from '@/lib/auth-actions';
 
 interface UserData {
   name: string;
@@ -22,6 +23,10 @@ export function ProfileForm({ user }: { user: UserData }) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isLoggingOut, startLogout] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleFile = (file: File | null) => {
     setAvatarFile(file);
@@ -42,7 +47,25 @@ export function ProfileForm({ user }: { user: UserData }) {
     });
   };
 
+  const handleLogout = () => {
+    startLogout(async () => {
+      await logoutUser();
+    });
+  };
+
+  const handleDeleteAccount = () => {
+    setDeleteError(null);
+    startDelete(async () => {
+      try {
+        await deleteAccount();
+      } catch (err) {
+        setDeleteError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+      }
+    });
+  };
+
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="rounded-3xl border border-stone-200 bg-white/70 backdrop-blur-sm shadow-sm p-6 md:p-8 space-y-6"
@@ -82,6 +105,66 @@ export function ProfileForm({ user }: { user: UserData }) {
         </button>
         {saved && <p className="text-sm text-[#2e5e4d] font-medium">Profil mis à jour ✓</p>}
       </div>
-    </form>
+      </form>
+
+      <div className="rounded-3xl border border-stone-200 bg-white/70 backdrop-blur-sm shadow-sm p-6 md:p-8 mt-6 space-y-5">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="text-sm font-medium text-stone-700">Déconnexion</p>
+            <p className="text-xs text-stone-400 mt-0.5">Vous devrez vous reconnecter pour accéder à votre compte.</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="px-5 py-2.5 rounded-full border border-stone-200 text-stone-700 text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-60"
+          >
+            {isLoggingOut ? 'Déconnexion...' : 'Se déconnecter'}
+          </button>
+        </div>
+
+        <div className="h-px bg-stone-100" />
+
+        <div>
+          <p className="text-sm font-medium text-red-700">Supprimer mon compte</p>
+          <p className="text-xs text-stone-400 mt-0.5 mb-3">
+            Cette action est irréversible. Vos boutiques, produits et avis seront définitivement supprimés.
+          </p>
+
+          {!confirmDelete ? (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="px-5 py-2.5 rounded-full border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 transition-colors"
+            >
+              Supprimer mon compte
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-sm text-stone-700 font-medium">Êtes-vous sûr ? Cette action est définitive.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-60"
+                >
+                  {isDeleting ? 'Suppression...' : 'Oui, supprimer définitivement'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="px-5 py-2.5 rounded-full border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-60"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+          {deleteError && <p className="text-sm text-red-600 mt-2">{deleteError}</p>}
+        </div>
+      </div>
+    </>
   );
 }

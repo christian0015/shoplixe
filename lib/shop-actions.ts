@@ -49,6 +49,10 @@ export async function updateShop(shopId: string, data: Partial<ShopInput>) {
     update.location = { type: 'Point', coordinates: [data.location.lng, data.location.lat] };
   }
 
+  // Si le logo/cover change, on supprime l'ancien de Cloudinary.
+  if (data.logo && shop.logo && data.logo !== shop.logo) await deleteImage(shop.logo);
+  if (data.cover && shop.cover && data.cover !== shop.cover) await deleteImage(shop.cover);
+
   Object.assign(shop, update);
   await shop.save();
 
