@@ -16,6 +16,9 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+/**
+ * Overlay UX : Indicateurs limités uniquement à la zone des produits
+ */
 function ScrollProgressOverlay({
   current,
   total,
@@ -35,6 +38,7 @@ function ScrollProgressOverlay({
         visible ? 'opacity-100' : 'opacity-0'
       }`}
     >
+      {/* 1. Indicateur Horizontal - Pilule flottante au-dessus du contenu */}
       <div className="pointer-events-auto absolute top-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-xl border border-white/15 px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono tracking-widest text-white/70 uppercase">
@@ -52,11 +56,13 @@ function ScrollProgressOverlay({
         </div>
       </div>
 
+      {/* 2. Indicateur Vertical avec Animation de Scroll (Left Fixed) */}
       <div className="pointer-events-auto absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/15 p-2.5 sm:p-3 rounded-full shadow-2xl">
-        <span className="text-[10px] font-mono text-white/50">
+        <span className="text-[10px] font-mono font-bold text-white tracking-wider">
           {String(current).padStart(2, '0')}
         </span>
 
+        {/* Rail de la jauge */}
         <div className="relative w-1.5 h-20 sm:h-28 bg-white/20 rounded-full overflow-hidden">
           <div
             className="absolute top-0 left-0 right-0 transition-all duration-300 ease-out rounded-full"
@@ -68,6 +74,7 @@ function ScrollProgressOverlay({
           {String(total).padStart(2, '0')}
         </span>
 
+        {/* Animation visuelle "Scroll down" */}
         <div className="mt-1 flex flex-col items-center gap-1 opacity-80 animate-bounce">
           <div className="w-3 h-5 border border-white/50 rounded-full flex justify-center pt-1">
             <div className="w-1 h-1.5 bg-white rounded-full" />
@@ -114,75 +121,50 @@ function MotionProductSection({
     if (!section || !content || !imgWrapper || !card) return;
 
     const ctx = gsap.context(() => {
-      // 1. ANTICIPATION ENTRÉE : Scale (0.2 -> 1.0) ET Grayscale (100% -> 0%)
-      gsap.fromTo(
-        imgWrapper,
-        { scale: 0.2, filter: 'grayscale(100%)' },
-        {
-          scale: 1,
-          filter: 'grayscale(0%)',
-          ease: 'power1.out',
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 95%',
-            end: 'top top',
-            scrub: 0.2,
-            invalidateOnRefresh: true,
-          },
-        }
-      );
-
-      // 2. TIMELINE PINNING (Effet Chiasma Original)
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: '+=45%',
+          end: '+=100%',
           pin: true,
-          scrub: 0.3,
+          scrub: 0.5,
           anticipatePin: 1,
           onEnter: () => onActive(index + 1),
           onEnterBack: () => onActive(index + 1),
         },
       });
 
+      // Entrée & Motion Chiasma
       tl.fromTo(
         content,
-        { opacity: 0.4 },
-        { opacity: 1, duration: 0.2, ease: 'power1.out' },
+        { opacity: 0 },
+        { opacity: 1, duration: 0.15, ease: 'power1.out' },
         0
       )
         .fromTo(
           imgWrapper,
           { yPercent: -12 },
-          { yPercent: 12, ease: 'none', duration: 1 },
+          { yPercent: 12, ease: 'none', duration: 0.8 },
           0
         )
         .fromTo(
           card,
           { y: 60, opacity: 0.3 },
-          { y: 0, opacity: 1, ease: 'power2.out', duration: 1 },
+          { y: 0, opacity: 1, ease: 'power2.out', duration: 0.8 },
           0
         );
 
-      // 3. SORTIE DYNAMIQUE : Scale (1.0 -> 0.2) ET Grayscale (0% -> 100%)
+      // Fondu noir très court (Pro)
       if (!isLast) {
-        gsap.fromTo(
-          imgWrapper,
-          { scale: 1, filter: 'grayscale(0%)' },
+        tl.to(
+          content,
           {
-            scale: 0.2,
-            filter: 'grayscale(100%)',
+            opacity: 0,
+            scale: 0.97,
+            duration: 0.12,
             ease: 'power2.in',
-            immediateRender: false, // Évite d'écraser la valeur d'entrée au chargement
-            scrollTrigger: {
-              trigger: section,
-              start: 'bottom bottom',
-              end: 'bottom top',
-              scrub: 0.2,
-              invalidateOnRefresh: true,
-            },
-          }
+          },
+          0.88
         );
       }
     }, section);
@@ -199,10 +181,10 @@ function MotionProductSection({
         ref={contentRef}
         className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-12 flex flex-col md:flex-row items-center justify-start relative pt-12"
       >
-        {/* Cadre de l'image de BASE */}
+        {/* Cadre de l'image (Descend au scroll) */}
         <div
           ref={imageWrapperRef}
-          className="relative w-full md:w-[58%] h-[320px] sm:h-[420px] md:h-[520px] rounded-[32px] overflow-hidden z-0 flex items-center justify-center bg-white/5 border border-white/10 will-change-transform"
+          className="relative w-full md:w-[58%] h-[320px] sm:h-[420px] md:h-[520px] rounded-[32px] overflow-hidden z-0 flex items-center justify-center bg-white/5 border border-white/10"
         >
           {product.images[0] ? (
             <div className="relative w-full h-full p-2">
@@ -210,7 +192,7 @@ function MotionProductSection({
                 src={product.images[0]}
                 alt={product.name}
                 fill
-                className="object-cover rounded-[24px]"
+                className="object-cover"
                 sizes="(max-width: 768px) 100vw, 58vw"
                 priority={index === 0}
               />
@@ -228,7 +210,7 @@ function MotionProductSection({
           </span>
         </div>
 
-        {/* Card Glass */}
+        {/* Card Glass (Monte au scroll) */}
         <div className="w-full md:w-[48%] mt-[-40px] md:mt-0 md:-ml-28 lg:-ml-36 z-10 relative flex justify-center md:justify-start">
           <Link
             ref={cardRef}
@@ -304,6 +286,7 @@ export function LiquidGlassProducts({
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const accent = accentColor || theme.accent;
 
+  // Contrôle de visibilité des indicateurs : uniquement dans ce composant
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -329,6 +312,7 @@ export function LiquidGlassProducts({
 
   return (
     <div ref={containerRef} className="relative w-full bg-black">
+      {/* Overlay UX actif UNIQUEMENT quand l'utilisateur survole la section produits */}
       <ScrollProgressOverlay
         current={activeStep}
         total={products.length}
@@ -336,11 +320,13 @@ export function LiquidGlassProducts({
         visible={isOverlayVisible}
       />
 
+      {/* Sections produits */}
       {products.map((product, index) => (
         <MotionProductSection
           key={product._id}
           product={product}
           index={index}
+          total={products.length}
           shopSlug={shopSlug}
           accent={accent}
           isFavorite={favoriteIds.includes(product._id)}

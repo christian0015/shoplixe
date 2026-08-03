@@ -3,6 +3,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { unstable_rethrow } from 'next/navigation';
 import { Input, Button } from '@/components/ui';
 import { authenticateUser } from '@/lib/auth-actions';
 
@@ -17,9 +18,15 @@ export default function LoginPage() {
     setError(null);
     startTransition(async () => {
       try {
-        await authenticateUser({ email, password });
+        const result = await authenticateUser({ email, password });
+        // Si authenticateUser réussit, il redirige lui-même — on n'atteint
+        // ce point que s'il a retourné une erreur "attendue".
+        if (result?.error) setError(result.error);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+        // Laisse passer les redirections internes de Next.js (ex: redirect('/dashboard')
+        // après connexion réussie) — sans ça, elles s'affichaient comme une erreur rouge.
+        unstable_rethrow(err);
+        setError('Une erreur est survenue. Réessayez dans un instant.');
       }
     });
   };

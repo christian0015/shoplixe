@@ -19,11 +19,11 @@ export async function createUser(data: {
   email: string;
   password: string;
   newsletter: boolean;
-}) {
+}): Promise<{ error: string } | undefined> {
   await connectDB();
 
   const existing = await User.findOne({ email: data.email.toLowerCase() });
-  if (existing) throw new Error('Un compte existe déjà avec cet email.');
+  if (existing) return { error: 'Un compte existe déjà avec cet email.' };
 
   const passwordHash = await hashPassword(data.password);
   const user = await User.create({
@@ -46,14 +46,14 @@ export async function createUser(data: {
   redirect('/dashboard');
 }
 
-export async function authenticateUser(data: { email: string; password: string }) {
+export async function authenticateUser(data: { email: string; password: string }): Promise<{ error: string } | undefined> {
   await connectDB();
 
   const user = await User.findOne({ email: data.email.toLowerCase() });
-  if (!user) throw new Error('Email ou mot de passe incorrect.');
+  if (!user) return { error: 'Email ou mot de passe incorrect.' };
 
   const valid = await verifyPassword(data.password, user.passwordHash);
-  if (!valid) throw new Error('Email ou mot de passe incorrect.');
+  if (!valid) return { error: 'Email ou mot de passe incorrect.' };
 
   const token = signJWT({ userId: String(user._id), email: user.email, role: user.role });
   const cookieStore = await cookies();

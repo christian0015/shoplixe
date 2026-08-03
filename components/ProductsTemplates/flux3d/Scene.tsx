@@ -1,8 +1,9 @@
+// components/ProductsTemplates/flux3d/Scene.tsx
 'use client';
 
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useTexture, Float } from '@react-three/drei';
+import { Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useRouter } from 'next/navigation';
 
@@ -45,7 +46,38 @@ function pieceOpacity(absD: number) {
   return Math.min(farT, nearT);
 }
 
-// Générateur de texture de particule 100% ronde (pas de carrés)
+function createFallbackTexture(text: string = 'PRODUIT') {
+  if (typeof window === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  // Background moderne
+  const grad = ctx.createLinearGradient(0, 0, 512, 512);
+  grad.addColorStop(0, '#111827');
+  grad.addColorStop(1, '#1f2937');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Border
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(20, 20, 472, 472);
+
+  // Text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 36px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text.slice(0, 15).toUpperCase(), 256, 256);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function createCircleTexture() {
   if (typeof window === 'undefined') return null;
   const canvas = document.createElement('canvas');
@@ -69,7 +101,6 @@ function createCircleTexture() {
   return texture;
 }
 
-// 1. Particules sous-marines denses et prolongées tout au long du chemin
 function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number; accent: string; extendedDepth: number }) {
   const pointsRef = useRef<THREE.Points>(null);
   const circleTexture = useMemo(() => createCircleTexture(), []);
@@ -79,10 +110,8 @@ function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number
     const spd = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      // Concentrés près du centre visuel (X: -4 à +4, Y: -3.5 à +3.5)
       pos[i * 3] = (Math.random() - 0.5) * 8.0;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 7.0;
-      // Étendu loin devant le premier produit et largement après le dernier
       pos[i * 3 + 2] = 4 - Math.random() * (extendedDepth + 15);
       spd[i] = Math.random() * 0.005 + 0.0015;
     }
@@ -120,21 +149,19 @@ function DenseOceanDust({ count = 280, accent, extendedDepth }: { count?: number
   );
 }
 
-// 2. Assets 3D réguliers et très concentrés entre chaque section
 function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; accent: string }) {
   const groupRef = useRef<THREE.Group>(null);
 
   const assets = useMemo(() => {
     if (!positions.length) return [];
     const items = [];
-    const countPerProduct = 4; // Densité fortement augmentée
+    const countPerProduct = 4;
 
     for (let i = 0; i < positions.length; i++) {
       const zPos = positions[i].z;
       for (let j = 0; j < countPerProduct; j++) {
         items.push({
           id: `dense-ast-${i}-${j}`,
-          // Bien plus près de la trajectoire directe de la caméra pour un vrai impact visuel
           x: (Math.random() - 0.5) * 3.6,
           y: (Math.random() - 0.5) * 3.0,
           z: zPos + (Math.random() - 0.5) * 2.8,
@@ -178,23 +205,70 @@ function DenseOceanAssets({ positions, accent }: { positions: PlanePosition[]; a
   );
 }
 
+/**
+ * ImagePlane Securisé : Evite les erreurs Runtime de chargement CORS / liens cassés
+ */
 function ImagePlane({
   url,
   maxW,
   maxH,
   imgMatRef,
 }: {
-  url: string;
+  url: string | null;
   maxW: number;
   maxH: number;
   imgMatRef: React.MutableRefObject<THREE.MeshBasicMaterial | null>;
 }) {
-  const texture = useTexture(url);
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const [aspect, setAspect] = useState<number>(1);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!url) {
+      const fallback = createFallbackTexture('Sans Visuel');
+      if (isMounted) {
+        setTexture(fallback);
+        setAspect(1);
+      }
+      return;
+    }
+
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+
+    loader.load(
+      url,
+      (loadedTex) => {
+        if (!isMounted) return;
+        const img = loadedTex.image;
+        if (img && img.width && img.height) {
+          setAspect(img.width / img.height);
+        }
+        setTexture(loadedTex);
+      },
+      undefined,
+      () => {
+        // En cas d'erreur réseau, CORS ou URL cassée
+        if (!isMounted) return;
+        console.warn(`[3D Scene] Impossible de charger l'image: ${url}. Activation du fallback.`);
+        const fallback = createFallbackTexture('Image Indisponible');
+        setTexture(fallback);
+        setAspect(1);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
   const { w, h } = useMemo(() => {
-    const ratio = texture.image ? texture.image.width / texture.image.height : 1;
-    if (ratio >= maxW / maxH) return { w: maxW, h: maxW / ratio };
-    return { w: maxH * ratio, h: maxH };
-  }, [texture, maxW, maxH]);
+    if (aspect >= maxW / maxH) return { w: maxW, h: maxW / aspect };
+    return { w: maxH * aspect, h: maxH };
+  }, [aspect, maxW, maxH]);
+
+  if (!texture) return null;
 
   return (
     <mesh position={[0, 0, 0]}>
@@ -258,11 +332,7 @@ function ProductPiece({
       onPointerOver={() => (document.body.style.cursor = 'pointer')}
       onPointerOut={() => (document.body.style.cursor = 'auto')}
     >
-      {item.image && (
-        <Suspense fallback={null}>
-          <ImagePlane url={item.image} maxW={maxW} maxH={maxH} imgMatRef={imgMatRef} />
-        </Suspense>
-      )}
+      <ImagePlane url={item.image} maxW={maxW} maxH={maxH} imgMatRef={imgMatRef} />
     </group>
   );
 }
@@ -360,7 +430,6 @@ export default function Scene({ items, positions, frameColor, accent, mobile, pr
   const maxH = mobile ? 1.8 : 1.9;
   const fov = mobile ? 38 : 30;
 
-  // Calcul de la profondeur totale prolongée de la scène
   const extendedDepth = useMemo(() => {
     if (!positions.length) return 20;
     return Math.abs(positions[positions.length - 1].z);
@@ -377,7 +446,6 @@ export default function Scene({ items, positions, frameColor, accent, mobile, pr
       <directionalLight position={[0, 8, 2]} intensity={0.85} color={accent} />
       <pointLight position={[0, -2, -12]} intensity={0.4} color={accent} />
 
-      {/* Ambiance denses qui couvre l'intégralité du parcours */}
       <DenseOceanDust count={mobile ? 120 : 300} accent={accent} extendedDepth={extendedDepth} />
       <DenseOceanAssets positions={positions} accent={accent} />
 

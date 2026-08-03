@@ -3,6 +3,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { unstable_rethrow } from 'next/navigation';
 import { Input, Button, Toggle } from '@/components/ui';
 import { createUser } from '@/lib/auth-actions';
 
@@ -24,9 +25,11 @@ export default function SignupPage() {
     setError(null);
     startTransition(async () => {
       try {
-        await createUser({ name, email, password, newsletter });
+        const result = await createUser({ name, email, password, newsletter });
+        if (result?.error) setError(result.error);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+        unstable_rethrow(err);
+        setError('Une erreur est survenue. Réessayez dans un instant.');
       }
     });
   };
